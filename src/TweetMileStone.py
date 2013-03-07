@@ -22,6 +22,9 @@ def main():
     '''
     although you can see TwitterError: Status is a duplicate in console, you can still see the tweets on twitter. 
     '''
+    '''
+    test how to merge
+    '''
 
 if __name__ == "__main__":
     main()

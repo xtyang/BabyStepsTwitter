@@ -54,8 +54,11 @@ def postTweet(database, account):
         print row
         api = twitter.Api(consumer_key=account[2], consumer_secret=account[3], access_token_key=account[4], access_token_secret=account[5])
         status = row[1]
+        print "original: "+status
         milestone_id = row[0]
-        #TODO replace %n% --> your baby; %pa%-->their
+        #replace %n% --> your baby; %pa%-->their
+        status = status.replace('%n%', 'your baby').replace('%pa%', 'their')
+        print "after replacement: "+status
         api.PostUpdate(status)
         cursor.close()
         return milestone_id #return milestone id

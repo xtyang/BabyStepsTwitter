@@ -57,7 +57,7 @@ def postTweet(database, account):
         print "original: "+status
         milestone_id = row[0]
         #replace %n% --> your baby; %pa%-->their
-        status = status.replace('%n%', 'your baby').replace('%pa%', 'their')
+        status = status.replace('%n%', 'your baby').replace('%pa%', 'their').replace('%s%', 'he/she').replace('%o%','him/her')
         print "after replacement: "+status
         api.PostUpdate(status)
         cursor.close()

@@ -12,16 +12,15 @@ import MySQLdb
 
 def calculateCurrentAge(bornYear, bornMonth):
     now = datetime.datetime.now()
-    currentAge = (now.year - bornYear)*12 + now.month - bornMonth
+    currentAge = (now.year - bornYear) * 12 + now.month - bornMonth
     return currentAge
 
 def selectMilestoneQuery(currentAge, most_recent_milestone):
-    currentAge = 6 #for testing
-    query = "SELECT questionID, text FROM questionnairecontent WHERE month = "+str(currentAge) +" AND questionID > "+ str(most_recent_milestone) +" ORDER BY questionID ASC;"
+    query = "SELECT questionID, text FROM questionnairecontent WHERE month = " + str(currentAge) + " AND questionID > " + str(most_recent_milestone) + " ORDER BY questionID ASC;"
     return query
 
 def postTweet(database, account):
-    print "postTweet for account "+ account[1]
+    print "postTweet for account " + account[1]
     '''
     twitteraccount table
     account[0]: id
@@ -37,7 +36,7 @@ def postTweet(database, account):
     TODO: use macro to for table fields make code readable and easy to maintain
     ''' 
     currentAge = calculateCurrentAge(account[6], account[7])
-    print "current age = "+str(currentAge)
+    print "current age = " + str(currentAge)
     query = selectMilestoneQuery(currentAge, account[8])
     print query
     cursor = database.cursor()
@@ -45,26 +44,26 @@ def postTweet(database, account):
     row = cursor.fetchone()
     
     if row == None:
-        #TODO: select activiy or tip to tweet
+        # TODO: select activiy or tip to tweet
         print "select activity or tip to tweet"
         cursor.close()
         return None
     else:
-        #post milestone to twitter
+        # post milestone to twitter
         print row
         api = twitter.Api(consumer_key=account[2], consumer_secret=account[3], access_token_key=account[4], access_token_secret=account[5])
         status = row[1]
-        print "original: "+status
+        print "original: " + status
         milestone_id = row[0]
-        #replace %n% --> your baby; %pa%-->their
-        status = status.replace('%n%', 'your baby').replace('%pa%', 'their').replace('%s%', 'he/she').replace('%o%','him/her')
-        print "after replacement: "+status
+        # replace %n% --> your baby; %pa%-->their
+        status = status.replace('%n%', 'your baby').replace('%pa%', 'their').replace('%s%', 'he/she').replace('%o%', 'him/her')
+        print "after replacement: " + status
         api.PostUpdate(status)
         cursor.close()
-        return milestone_id #return milestone id
+        return milestone_id  # return milestone id
 
 def updateMilestoneOnTwitterAccountTable(database, most_recent_milestone, account_id):
-    query = 'UPDATE twitteraccount SET most_recent_milestone = '+str(most_recent_milestone)+'  WHERE id = '+str(account_id)+";"
+    query = 'UPDATE twitteraccount SET most_recent_milestone = ' + str(most_recent_milestone) + '  WHERE id = ' + str(account_id) + ";"
     print query
     cursor = database.cursor()
     cursor.execute(query)
@@ -75,8 +74,8 @@ def startPostTweets():
     '''
     go through the twitteraccount table and post one milestone for each account
     '''
-    db = MySQLdb.connect(host="db.babystepsuw.org",user="babystepsdbadmin",
-                  passwd="vNRLtLf2Rhyy",db="babystepsdb")
+    db = MySQLdb.connect(host="db.babystepsuw.org", user="babystepsdbadmin",
+                  passwd="vNRLtLf2Rhyy", db="babystepsdb")
     cur = db.cursor()
     cur.execute("SELECT * FROM twitteraccount;")
     

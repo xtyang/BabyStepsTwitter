@@ -9,15 +9,12 @@ import MySQLdb
 from decimal import *
 
 
-api = twitter.Api(consumer_key='XwiBU0XPMQbLuTrKC6mq7w',
-                      consumer_secret='BImRVn7Bpva5KAC3Ax7IFMfClz93DkwxdMgFtZtV0',
-                      access_token_key='125931894-Jt0FlCaHo8tYWGPF2e8ps9otpVwYdJ8cHiay97MS',
-                      access_token_secret='aiI8jFAuznh5NSsI3ZsR0Q0hzMU7qZHRqKdi6h3z1o')
-
 db = MySQLdb.connect(host="db.babystepsuw.org",user="babystepsdbadmin",
-passwd="vNRLtLf2Rhyy",db="babystepsdb")
+passwd="vNRLtLf2Rhyy",db="babystepsdb") 
+#host= db.babystepsuw.org
 
-cursor = db.cursor()
+cursor  = db.cursor()
+api     = None
 
 
 def getHashtagSet(status):
@@ -53,7 +50,9 @@ def getQuestionID(hashtagSet):
         return 0
 
 def getQuestionIDfromSource(status):
+    global api
     print "getQuestionIDfromSource() started. "
+    print api
     sourceId = status.GetInReplyToStatusId()
     if(sourceId == None): 
         questionIDnum = 0
@@ -118,9 +117,9 @@ def writeResponseToDb(accountID, childID, questionID, answer, responseTime, scre
     tmpS    = "INSERT INTO questionnaireresponses (childID, questionID, answer, accountID, date) VALUES('%s','%s','%s','%s','%s')"% (childID, questionID, answer, accountID, responseTime)
     print tmpS
     cursor.execute(tmpS)
-    tmpS    = "UPDATE `babystepsdb`.`twitteraccount` SET `lastchecked` = '%s' WHERE `account_name` = '%s'"% (responseTime, screenName)
-    print tmpS
-    cursor.execute(tmpS)
+    #tmpS    = "UPDATE `babystepsdb`.`twitteraccount` SET `lastchecked` = '%s' WHERE `account_name` = '%s'"% (responseTime, screenName)
+    #print tmpS
+    #cursor.execute(tmpS)
     db.commit()
     print("insert response to DB succeed. ")
  
@@ -136,6 +135,7 @@ def userRegistered(screenName):
     return False     
     
 def sendErrorDM(screenName):
+    global api
     api.PostDirectMessage(screenName, "Reminder: respond to questions with #yes #sometimes or #notyet and #firstname and #babycode.")
 
 def timeToDate(timeS):
@@ -145,44 +145,68 @@ def timeToDate(timeS):
     return ts
 
 def main():
-    mentions = api.GetMentions(None, None, None)
-    for mention in mentions: 
-        print "--------------------------------------------------------"
-        responseTime = timeToDate(mention.GetCreatedAt())
-        print responseTime
-        hashtagSet = getHashtagSet(mention)
+    global api
+    twitterAccountRowNum    = cursor.execute("SELECT * FROM twitteraccount")
+    print "twitterAccountRowNum" ,twitterAccountRowNum
+    twitterAccountLt    = []
+    while True:
+        tmpTwitter  = cursor.fetchone()
+        if tmpTwitter == None:
+            break
+        twitterAccountLt.append(tmpTwitter)
         
-        print 'hashtagset',hashtagSet 
-        questionID = getQuestionID(hashtagSet)
-        print 'questionID',questionID
-        if (questionID != 0):
-            answer = getAnswer(hashtagSet)
-            screenName = mention.GetUser().GetScreenName()
-            print "Screen Name: " + screenName
-            accountID = getAccountID(screenName) 
-            childID = getChildID(hashtagSet, accountID)
-            print "childID",childID
-            print "prepare to write data into DB"
-            if childID != -1:
-                writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName)
+    for twitterAccount in twitterAccountLt:
+        
+        if twitterAccount == None:
+            print "twitterAccount" , twitterAccount
+            break
+        print   twitterAccount
+        api     = twitter.Api(  consumer_key=twitterAccount[2],
+                                consumer_secret=twitterAccount[3],
+                                access_token_key=twitterAccount[4],
+                                access_token_secret=twitterAccount[5])
+
+        mentions = api.GetMentions(None, None, None)
+        print api
+        for mention in mentions: 
+            print "--------------------------------------------------------"
+            responseTime = timeToDate(mention.GetCreatedAt())
+            print responseTime
+            hashtagSet = getHashtagSet(mention)
             
-        else: 
-            questionID = getQuestionIDfromSource(mention)
-            if (questionID != 0): 
+            print 'hashtagset',hashtagSet 
+            questionID = getQuestionID(hashtagSet)
+            print 'questionID',questionID
+            if (questionID != 0):
+                print api
                 answer = getAnswer(hashtagSet)
                 screenName = mention.GetUser().GetScreenName()
-                accountID = getAccountID(screenName)
+                print "Screen Name: " + screenName
+                accountID = getAccountID(screenName) 
                 childID = getChildID(hashtagSet, accountID)
-                if childID !=-1:
+                print "childID",childID
+                print "prepare to write data into DB"
+                if childID != -1:
                     writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName)
-                    pass
                 
-            else: 
-                screenName = mention.GetUser().GetScreenName()
-                if (userRegistered(screenName)): 
-                    sendErrorDM(screenName)
-        print "========================================================"
-    
+            else:
+                print api 
+                questionID = getQuestionIDfromSource(mention)
+                if (questionID != 0): 
+                    answer = getAnswer(hashtagSet)
+                    screenName = mention.GetUser().GetScreenName()
+                    accountID = getAccountID(screenName)
+                    childID = getChildID(hashtagSet, accountID)
+                    if childID !=-1:
+                        writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName)
+                        pass
+                    
+                else: 
+                    screenName = mention.GetUser().GetScreenName()
+                    if (userRegistered(screenName)): 
+                        sendErrorDM(screenName)
+            print "========================================================"
+        print 'end of loop'
     db.close()
 if __name__ == '__main__':
     main()

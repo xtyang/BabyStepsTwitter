@@ -110,14 +110,15 @@ def getChildID(hashtagSet, accountID):
     print childID
     return childID
         
-          
-def writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName):
+'''changes! '''          
+def writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName, newLastMentionId):
     # DB: responseID, childID, questionID, answer, accountID, date
     print("writeResponseToDb() started.")
     tmpS    = "INSERT INTO questionnaireresponses (childID, questionID, answer, accountID, date) VALUES('%s','%s','%s','%s','%s')"% (childID, questionID, answer, accountID, responseTime)
     print tmpS
     cursor.execute(tmpS)
-    #tmpS    = "UPDATE `babystepsdb`.`twitteraccount` SET `lastchecked` = '%s' WHERE `account_name` = '%s'"% (responseTime, screenName)
+    '''changes! '''
+    #tmpS    = "UPDATE `babystepsdb`.`twitteraccount` SET `lastchecked` = '%s', 'lastMentionId' = '%s' WHERE `account_name` = '%s'"% (responseTime, newLastMentionId, screenName)
     #print tmpS
     #cursor.execute(tmpS)
     db.commit()
@@ -166,9 +167,17 @@ def main():
                                 access_token_key=twitterAccount[4],
                                 access_token_secret=twitterAccount[5])
 
-        mentions = api.GetMentions(None, None, None)
+        lastMentionId = twitterAccount[10]
+        mentions = api.GetMentions(lastMentionId, None, None, None)
         print api
+        '''changes! '''
+        newestMention = True
+        newLastMentionId = 0
         for mention in mentions: 
+            if(newestMention) {
+                newLastMentionId = mention.GetId()
+                newestMention = False
+            }
             print "--------------------------------------------------------"
             responseTime = timeToDate(mention.GetCreatedAt())
             print responseTime
@@ -187,8 +196,8 @@ def main():
                 print "childID",childID
                 print "prepare to write data into DB"
                 if childID != -1:
-                    writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName)
-                
+                    writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName, newLastMentionId)
+                '''changes! '''
             else:
                 print api 
                 questionID = getQuestionIDfromSource(mention)
@@ -197,8 +206,8 @@ def main():
                     screenName = mention.GetUser().GetScreenName()
                     accountID = getAccountID(screenName)
                     childID = getChildID(hashtagSet, accountID)
-                    if childID !=-1:
-                        writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName)
+                    if childID !=-1: '''changes!'''
+                        writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName, newLastMentionId)
                         pass
                     
                 else: 

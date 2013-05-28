@@ -9,7 +9,7 @@ import MySQLdb
 from decimal import *
 
 
-db = MySQLdb.connect(host="db.babystepsuw.org",user="babystepsdbadmin",
+db = MySQLdb.connect(host="140.117.179.157",user="babystepsdbadmin",
 passwd="vNRLtLf2Rhyy",db="babystepsdb") 
 #host= db.babystepsuw.org
 
@@ -118,9 +118,9 @@ def writeResponseToDb(accountID, childID, questionID, answer, responseTime, scre
     print tmpS
     cursor.execute(tmpS)
     '''changes! '''
-    #tmpS    = "UPDATE `babystepsdb`.`twitteraccount` SET `lastchecked` = '%s', 'lastMentionId' = '%s' WHERE `account_name` = '%s'"% (responseTime, newLastMentionId, screenName)
-    #print tmpS
-    #cursor.execute(tmpS)
+    tmpS    = "UPDATE `babystepsdb`.`twitteraccount` SET `lastMentionId` = '%s' WHERE `account_name` = '%s'"% (newLastMentionId, screenName)
+    print tmpS
+    cursor.execute(tmpS)
     db.commit()
     print("insert response to DB succeed. ")
  
@@ -168,16 +168,19 @@ def main():
                                 access_token_secret=twitterAccount[5])
 
         lastMentionId = twitterAccount[10]
-        mentions = api.GetMentions(lastMentionId, None, None, None)
-        print api
+        print "lastMentionId",lastMentionId
+        '''changes by tien'''
+        if '0'==lastMentionId:continue
+        mentions = api.GetMentions(str(int(lastMentionId)-1), None, None)
+        print "mentions",mentions
         '''changes! '''
         newestMention = True
         newLastMentionId = 0
         for mention in mentions: 
-            if(newestMention) {
+            if newestMention == True: 
                 newLastMentionId = mention.GetId()
                 newestMention = False
-            }
+            
             print "--------------------------------------------------------"
             responseTime = timeToDate(mention.GetCreatedAt())
             print responseTime
@@ -206,7 +209,8 @@ def main():
                     screenName = mention.GetUser().GetScreenName()
                     accountID = getAccountID(screenName)
                     childID = getChildID(hashtagSet, accountID)
-                    if childID !=-1: '''changes!'''
+                    if childID !=-1:
+                        '''changes!'''
                         writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName, newLastMentionId)
                         pass
                     

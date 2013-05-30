@@ -6,6 +6,8 @@ Created on Feb 21, 2013
 
 import twitter
 
+
+
 api = twitter.Api()
 
 api = twitter.Api(consumer_key='d3UzxZGL1nHnij6N3vTKA',

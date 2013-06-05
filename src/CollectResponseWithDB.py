@@ -178,6 +178,7 @@ def main():
         
         '''changes by tien'''
 <<<<<<< HEAD
+<<<<<<< HEAD
         
         if '0'==lastMentionId:continue      
         mentions = api.GetMentions(str(int(lastMentionId)-1), None, None)
@@ -239,6 +240,8 @@ def main():
                 if (questionID != 0):
                     print api
 =======
+=======
+>>>>>>> 571bde56e1a661c73d366a8af11e7ec6a0f6e1df
         '''
         if '0'==lastMentionId:continue
         mentions = api.GetMentions(str(int(lastMentionId)-1), None, None)

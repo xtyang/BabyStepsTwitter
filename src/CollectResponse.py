@@ -5,16 +5,14 @@ Created on May 9, 2013
 '''
 
 import twitter
-import MySQLdb
+#import MySQLdb
 from decimal import *
 
 
 api = twitter.Api(consumer_key='d3UzxZGL1nHnij6N3vTKA',
                       consumer_secret='Z11fcmiwNCW7JI8l4g6cIhDG1w6ZsLS2uApTpVnRo',
                       access_token_key='54065003-PPp1hbbt02oL4rzZ82vVL6i6ry1SVdcayMEtlRwC3',
-                      access_token_secret='ouqVXw0nJCg7OrVH1hqYZtwuRTrP6wFqblaYE8qHI')
-
-
+                      access_token_secret='ouqVXw0nJCg7OrVH1hqYZtwuRTrP6wFqblaYE8qHI') 
 
 def getHashtagSet(status):
     print "getHashtagSet() started. "
@@ -99,10 +97,11 @@ def getAccountID(screenName):
     print
 
 
-def writeResponseToDb(accountID, responseDate, childID, questionID, answer, responseTime, twiterAccountID):
+def writeResponseToDb(accountID, childID, questionID, answer, responseTime, twiterAccountID):
     ''' insert into questionnaireresponses accountID, responseDate, childID, questionID, answer '''
-    ''' insert into twitteraccount lastchecked=responseTime where id=twitterAccountID'''
+    ''' insert into twitteraccount lastchecked=checkTime where id=twitterAccountID'''
     print
+
 
 
 def userRegistered(screenName):
@@ -121,11 +120,36 @@ def userRegistered(screenName):
     
 def sendErrorDM(screenName):
     api.PostDirectMessage("yangxiaotong", "Reminder: respond to questions with #yes #sometimes or #notyet and #firstname and #babycode.")
-   
 
-mentions = api.GetMentions(None, None, None)
+limit = 2000
+sinceId = 339970840852578304
+page = 1
+mentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+oldLastId = mentions[-1].GetId()
+newLastId = 0
+isNotLast = True
+while(isNotLast and len(mentions) < limit):
+    page = page + 1
+    moreMentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+    for moreMention in moreMentions: 
+        mentions.append(moreMention)
+    newLastId = mentions[-1].GetId()
+    if(newLastId == oldLastId): 
+        isNotLast = False
+    else: 
+        oldLastId = newLastId
+    print "newLastId: " + str(newLastId) + ", oldLastId: " + str(oldLastId)  
+    print "sinceId: " + str(sinceId)
+    print "Appended 100! "
+    print "mentions length: " + str(len(mentions))
+
+
+i=1;
 for mention in mentions: 
-    print "--------------------------------------------------------"
+    print str(i) + ". --------------------------------------------------------"
+    i = i+1
+    print "Friend's Screen Name: " + mention.GetUser().GetScreenName()
+    print "Tweet ID: " + str(mention.GetId())
     responseTime = mention.GetCreatedAt()
     print responseTime
     hashtagSet = getHashtagSet(mention)
@@ -137,8 +161,12 @@ for mention in mentions:
         accountID = getAccountID(screenName)
         childID = getChildID(hashtagSet, accountID)
         
-        #writeResponseToDb(accountID, responseDate, childID, questionID, answer, responseTime, twitterAccountID)
+        #writeResponseToDb(accountID, childID, questionID, answer, responseTime, twitterAccountID)
         
+        #currentTime 
+
+
+'''  
     else: 
         questionID = getQuestionIDfromSource(mention)
         if (questionID != 0): 
@@ -148,9 +176,11 @@ for mention in mentions:
             childID = getChildID(hashtagSet, accountID)
             
             #writeResponseToDb(accountID, responseDate, childID, questionID, answer, responseTime, twiterAccountID)
-            
+'''   
+'''
         else: 
             screenName = mention.GetUser().GetScreenName()
             if (userRegistered(screenName)): 
                 sendErrorDM(screenName)
-    print "========================================================"
+'''
+print "========================================================"

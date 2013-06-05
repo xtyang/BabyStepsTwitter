@@ -177,6 +177,7 @@ def main():
         print "lastMentionId", lastMentionId
         
         '''changes by tien'''
+<<<<<<< HEAD
         
         if '0'==lastMentionId:continue      
         mentions = api.GetMentions(str(int(lastMentionId)-1), None, None)
@@ -237,11 +238,78 @@ def main():
                 questionID = getQuestionID(hashtagSet)
                 if (questionID != 0):
                     print api
+=======
+        '''
+        if '0'==lastMentionId:continue
+        mentions = api.GetMentions(str(int(lastMentionId)-1), None, None)
+        print "mentions",mentions
+        '''
+        
+        limit = 2000
+        sinceId = 339970840852578304
+        page = 1
+        mentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+        oldLastId = mentions[-1].GetId()
+        newLastId = 0
+        isNotLast = True
+        while(isNotLast and len(mentions) < limit):
+            page = page + 1
+            moreMentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+            for moreMention in moreMentions: 
+                mentions.append(moreMention)
+            newLastId = mentions[-1].GetId()
+            if(newLastId == oldLastId): 
+                isNotLast = False
+            else: 
+                oldLastId = newLastId
+            print "newLastId: " + str(newLastId) + ", oldLastId: " + str(oldLastId)  
+            print "sinceId: " + str(sinceId)
+            print "Appended 100! "
+            print "mentions length: " + str(len(mentions))
+
+        '''changes! '''
+        '''newestMention = True
+        newLastMentionId = 0'''
+        
+        i=1
+        for mention in mentions: 
+            '''if newestMention == True: 
+                newLastMentionId = mention.GetId()
+                newestMention = False'''
+            
+            print str(i) + "--------------------------------------------------------"
+            i=i+1
+            print "Friend's Screen Name: " + mention.GetUser().GetScreenName()
+            print "Tweet ID: " + str(mention.GetId())
+            responseTime = timeToDate(mention.GetCreatedAt())
+            print responseTime
+            
+            hashtagSet = getHashtagSet(mention)
+            questionID = getQuestionID(hashtagSet)
+            if (questionID != 0):
+                print api
+                answer = getAnswer(hashtagSet)
+                screenName = mention.GetUser().GetScreenName()
+                print "Screen Name: " + screenName
+                accountID = getAccountID(screenName) 
+                childID = getChildID(hashtagSet, accountID)
+                print "childID: ", childID
+                print "prepare to write data into DB"
+                if childID != -1:
+                    writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName, newLastMentionId)
+                '''changes! '''
+            '''
+            else:
+                print api 
+                questionID = getQuestionIDfromSource(mention)
+                if (questionID != 0): 
+>>>>>>> 571bde56e1a661c73d366a8af11e7ec6a0f6e1df
                     answer = getAnswer(hashtagSet)
                     screenName = mention.GetUser().GetScreenName()
                     print "Screen Name: " + screenName
                     accountID = getAccountID(screenName) 
                     childID = getChildID(hashtagSet, accountID)
+<<<<<<< HEAD
                     print "childID: ", childID
                     print "prepare to write data into DB"
                     if childID != -1:
@@ -250,6 +318,18 @@ def main():
         
                 print "========================================================"
         writeLastCheckToDb(accountScreenName, newLastMentionId)
+=======
+                    if childID !=-1:
+                        writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName, newLastMentionId)
+                        pass
+                    
+                else: 
+                    screenName = mention.GetUser().GetScreenName()
+                    if (userRegistered(screenName)): 
+                        sendErrorDM(screenName)
+            '''
+            print "========================================================"
+>>>>>>> 571bde56e1a661c73d366a8af11e7ec6a0f6e1df
         print 'end of loop'
     db.close()
 if __name__ == '__main__':

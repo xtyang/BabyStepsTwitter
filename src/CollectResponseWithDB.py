@@ -9,9 +9,8 @@ import MySQLdb
 from decimal import *
 
 
-db = MySQLdb.connect(host="140.117.179.157",user="babystepsdbadmin",
+db = MySQLdb.connect(host="db.babystepsuw.org",user="babystepsdbadmin",
 passwd="vNRLtLf2Rhyy",db="babystepsdb") 
-#host= db.babystepsuw.org
 
 cursor  = db.cursor()
 api     = None
@@ -111,19 +110,24 @@ def getChildID(hashtagSet, accountID):
     return childID
         
 '''changes! '''          
-def writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName, newLastMentionId):
+def writeResponseToDb(accountID, childID, questionID, answer, responseTime):
     # DB: responseID, childID, questionID, answer, accountID, date
     print("writeResponseToDb() started.")
     tmpS    = "INSERT INTO questionnaireresponses (childID, questionID, answer, accountID, date) VALUES('%s','%s','%s','%s','%s')"% (childID, questionID, answer, accountID, responseTime)
     print tmpS
     cursor.execute(tmpS)
     '''changes! '''
+    db.commit()
+    print("insert response to DB succeed. ")
+
+def writeLastCheckToDb(screenName, newLastMentionId):
+    print("writeLastCheckToDb() started.")
     tmpS    = "UPDATE `babystepsdb`.`twitteraccount` SET `lastMentionId` = '%s' WHERE `account_name` = '%s'"% (newLastMentionId, screenName)
     print tmpS
     cursor.execute(tmpS)
     db.commit()
-    print("insert response to DB succeed. ")
- 
+    print("insert lastcheck to DB succeed. ")
+    
 def userRegistered(screenName):
     twitterRowNum   = cursor.execute('SELECT * FROM contactinfo')
     twitterInfos    = cursor.fetchall()
@@ -166,59 +170,86 @@ def main():
                                 consumer_secret=twitterAccount[3],
                                 access_token_key=twitterAccount[4],
                                 access_token_secret=twitterAccount[5])
+        
+        accountScreenName = twitterAccount[1]
 
         lastMentionId = twitterAccount[10]
-        print "lastMentionId",lastMentionId
+        print "lastMentionId", lastMentionId
+        
         '''changes by tien'''
-        if '0'==lastMentionId:continue
+        
+        if '0'==lastMentionId:continue      
         mentions = api.GetMentions(str(int(lastMentionId)-1), None, None)
-        print "mentions",mentions
-        '''changes! '''
-        newestMention = True
-        newLastMentionId = 0
-        for mention in mentions: 
-            if newestMention == True: 
-                newLastMentionId = mention.GetId()
-                newestMention = False
-            
-            print "--------------------------------------------------------"
-            responseTime = timeToDate(mention.GetCreatedAt())
-            print responseTime
-            hashtagSet = getHashtagSet(mention)
-            
-            print 'hashtagset',hashtagSet 
-            questionID = getQuestionID(hashtagSet)
-            print 'questionID',questionID
-            if (questionID != 0):
-                print api
-                answer = getAnswer(hashtagSet)
-                screenName = mention.GetUser().GetScreenName()
-                print "Screen Name: " + screenName
-                accountID = getAccountID(screenName) 
-                childID = getChildID(hashtagSet, accountID)
-                print "childID",childID
-                print "prepare to write data into DB"
-                if childID != -1:
-                    writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName, newLastMentionId)
-                '''changes! '''
-            else:
-                print api 
-                questionID = getQuestionIDfromSource(mention)
-                if (questionID != 0): 
+        #print "mentions",mentions
+        
+        limit = 2000
+
+        query   = 'SELECT lastMentionId FROM twitteraccount WHERE account_name="%s"'%(accountScreenName)
+        #print 'query',query
+        rowNum  = cursor.execute(query)
+        infos   = cursor.fetchall()
+        #print 'infos',infos 
+        #print len(infos)
+        sinceId = infos[0][0]
+
+        page = 1
+        mentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+        
+        if(len(mentions) > 0):
+            oldLastId = mentions[-1].GetId()
+            newLastId = 0
+            isNotLast = True
+            while(isNotLast and len(mentions) < limit):
+                page = page + 1
+                moreMentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+                for moreMention in moreMentions: 
+                    mentions.append(moreMention)
+                newLastId = mentions[-1].GetId()
+                if(newLastId == oldLastId): 
+                    isNotLast = False
+                else: 
+                    oldLastId = newLastId
+                print "newLastId: " + str(newLastId) + ", oldLastId: " + str(oldLastId)  
+                print "sinceId: " + str(sinceId)
+                print "Appended 100! "
+                print "mentions length: " + str(len(mentions))
+    
+            '''changes! '''
+            #newestMention = True
+            #newLastMentionId = 0
+
+            i=1
+            newestMention = True
+            newLastMentionId = 0
+            for mention in mentions: 
+                if(newestMention):
+                    newLastMentionId = mention.GetId()
+                    newestMention = False
+                print "!!!!!!!!!!!!!!!!!!!!! newLastMentionId !!!!!!!!!!!!!!!!!!!!!" + str(newLastMentionId)
+                print str(i) + "--------------------------------------------------------"
+                i=i+1
+                print "Friend's Screen Name: " + mention.GetUser().GetScreenName()
+                print "Tweet ID: " + str(mention.GetId())
+                responseTime = timeToDate(mention.GetCreatedAt())
+                print responseTime
+                
+                hashtagSet = getHashtagSet(mention)
+                questionID = getQuestionID(hashtagSet)
+                if (questionID != 0):
+                    print api
                     answer = getAnswer(hashtagSet)
                     screenName = mention.GetUser().GetScreenName()
-                    accountID = getAccountID(screenName)
+                    print "Screen Name: " + screenName
+                    accountID = getAccountID(screenName) 
                     childID = getChildID(hashtagSet, accountID)
-                    if childID !=-1:
-                        '''changes!'''
-                        writeResponseToDb(accountID, childID, questionID, answer, responseTime, screenName, newLastMentionId)
-                        pass
-                    
-                else: 
-                    screenName = mention.GetUser().GetScreenName()
-                    if (userRegistered(screenName)): 
-                        sendErrorDM(screenName)
-            print "========================================================"
+                    print "childID: ", childID
+                    print "prepare to write data into DB"
+                    if childID != -1:
+                        writeResponseToDb(accountID, childID, questionID, answer, responseTime)
+                    '''changes! '''
+        
+                print "========================================================"
+        writeLastCheckToDb(accountScreenName, newLastMentionId)
         print 'end of loop'
     db.close()
 if __name__ == '__main__':

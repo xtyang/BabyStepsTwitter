@@ -108,16 +108,15 @@ def getChildID(hashtagSet, accountID):
     print childID
     return childID
         
-'''changes! '''          
+      
 def writeResponseToDb(accountID, childID, questionID, answer, responseTime):
     # DB: responseID, childID, questionID, answer, accountID, date
     print("writeResponseToDb() started.")
     tmpS    = "INSERT INTO questionnaireresponses (childID, questionID, answer, accountID, date) VALUES('%s','%s','%s','%s','%s')"% (childID, questionID, answer, accountID, responseTime)
     print tmpS
     cursor.execute(tmpS)
-    '''changes! '''
     db.commit()
-    print("insert response to DB succeed. ")
+    print("insert response to DB succeed.")
 
 def writeLastCheckToDb(screenName, newLastMentionId):
     print("writeLastCheckToDb() started.")
@@ -132,7 +131,6 @@ def userRegistered(screenName):
     twitterInfos    = cursor.fetchall()
     tmpTwitter      = []
     for twitter in twitterInfos:
-        #print twitter
         tmpTwitter.append(twitter[3])
     if screenName in tmpTwitter:
         return True
@@ -182,14 +180,12 @@ def main():
 
         lastMentionId = twitterAccount[10]
         print "lastMentionId", lastMentionId
-        
-        '''changes by tien'''
-        
+
         #=======================================================================
         # no lastMentionId skip to next account
         #=======================================================================
-        if '0'==lastMentionId:continue      
-        
+        if '0'==lastMentionId:continue     
+     
         limit = 2000
 
         #=======================================================================
@@ -222,10 +218,6 @@ def main():
             print "Appended 100! "
             print "mentions length: " + str(len(mentions))
 
-        '''changes! '''
-        #newestMention = True
-        #newLastMentionId = 0
-
         i=1
         newestMention = True
         newLastMentionId = 0
@@ -255,7 +247,6 @@ def main():
                 print "prepare to write data into DB"
                 if childID != -1:
                     writeResponseToDb(accountID, childID, questionID, answer, responseTime)
-                '''changes! '''
     
             print "========================================================"
         writeLastCheckToDb(accountScreenName, newLastMentionId)

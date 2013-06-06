@@ -180,6 +180,31 @@ def processResponses(mentions):
         print "========================================================"
     writeLastCheckToDb(accountScreenName, newLastMentionId)
     print 'end of loop'
+    
+def getUserReplies(sinceId)
+    page = 1
+    limit = 2000
+    mentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+    
+    if(len(mentions) == 0):continue 
+    oldLastId = mentions[-1].GetId()
+    newLastId = 0
+    isNotLast = True
+    while(isNotLast and len(mentions) < limit):
+        page = page + 1
+        moreMentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+        for moreMention in moreMentions: 
+            mentions.append(moreMention)
+        newLastId = mentions[-1].GetId()
+        if(newLastId == oldLastId): 
+            isNotLast = False
+        else: 
+            oldLastId = newLastId
+        print "newLastId: " + str(newLastId) + ", oldLastId: " + str(oldLastId)  
+        print "sinceId: " + str(sinceId)
+        print "Appended 100! "
+        print "mentions length: " + str(len(mentions))
+
 
 def main():
     global api
@@ -221,7 +246,7 @@ def main():
         #=======================================================================
         if '0'==lastMentionId:continue     
      
-        limit = 2000
+        
 
         #=======================================================================
         # let sinceID = lastMentionID
@@ -231,31 +256,11 @@ def main():
         infos   = cursor.fetchall()
         sinceId = infos[0][0]
 
-        page = 1
-        mentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+        
         directMsgs = api.GetDirectMessages(None, sinceId, 1)
-        
-        if(len(mentions) == 0):continue 
-        oldLastId = mentions[-1].GetId()
-        newLastId = 0
-        isNotLast = True
-        while(isNotLast and len(mentions) < limit):
-            page = page + 1
-            moreMentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
-            for moreMention in moreMentions: 
-                mentions.append(moreMention)
-            newLastId = mentions[-1].GetId()
-            if(newLastId == oldLastId): 
-                isNotLast = False
-            else: 
-                oldLastId = newLastId
-            print "newLastId: " + str(newLastId) + ", oldLastId: " + str(oldLastId)  
-            print "sinceId: " + str(sinceId)
-            print "Appended 100! "
-            print "mentions length: " + str(len(mentions))
+        replies = getUserReplies(sinceId)
 
-        processResponses(mentions)
-        
+        processResponses(replies)
         processResponses(directMsgs)
         
         

@@ -1,7 +1,7 @@
 '''
 Created on May 9, 2013
 
-@author: Tien, Yang
+@author: Tien, Xiaotong
 '''
 import time
 import twitter
@@ -146,6 +146,41 @@ def timeToDate(timeS):
     ts  = time.strftime("%Y-%m-%d %H:%M:%S",t)
     return ts
 
+def processResponses(mentions): 
+    i=1
+    newestMention = True
+    newLastMentionId = 0
+    for mention in mentions: 
+        if(newestMention):
+            newLastMentionId = mention.GetId()
+            print "newLastMentionId",newLastMentionId
+            newestMention = False
+        print "newLastMentionId: " + str(newLastMentionId)
+        print str(i) + "--------------------------------------------------------"
+        i=i+1
+        print "Friend's Screen Name: " + mention.GetUser().GetScreenName()
+        print "Tweet ID: " + str(mention.GetId())
+        responseTime = timeToDate(mention.GetCreatedAt())
+        print responseTime
+        
+        hashtagSet = getHashtagSet(mention)
+        questionID = getQuestionID(hashtagSet)
+        if (questionID != 0):
+            print api
+            answer = getAnswer(hashtagSet)
+            screenName = mention.GetUser().GetScreenName()
+            print "Screen Name: " + screenName
+            accountID = getAccountID(screenName) 
+            childID = getChildID(hashtagSet, accountID)
+            print "childID: ", childID
+            print "prepare to write data into DB"
+            if childID != -1:
+                writeResponseToDb(accountID, childID, questionID, answer, responseTime)
+
+        print "========================================================"
+    writeLastCheckToDb(accountScreenName, newLastMentionId)
+    print 'end of loop'
+
 def main():
     global api
     #===========================================================================
@@ -198,6 +233,7 @@ def main():
 
         page = 1
         mentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+        directMsgs = api.GetDirectMessages(None, sincdId, 1)
         
         if(len(mentions) == 0):continue 
         oldLastId = mentions[-1].GetId()
@@ -218,39 +254,11 @@ def main():
             print "Appended 100! "
             print "mentions length: " + str(len(mentions))
 
-        i=1
-        newestMention = True
-        newLastMentionId = 0
-        for mention in mentions: 
-            if(newestMention):
-                newLastMentionId = mention.GetId()
-                print "newLastMentionId",newLastMentionId
-                newestMention = False
-            print "!!!!!!!!!!!!!!!!!!!!! newLastMentionId !!!!!!!!!!!!!!!!!!!!!" + str(newLastMentionId)
-            print str(i) + "--------------------------------------------------------"
-            i=i+1
-            print "Friend's Screen Name: " + mention.GetUser().GetScreenName()
-            print "Tweet ID: " + str(mention.GetId())
-            responseTime = timeToDate(mention.GetCreatedAt())
-            print responseTime
-            
-            hashtagSet = getHashtagSet(mention)
-            questionID = getQuestionID(hashtagSet)
-            if (questionID != 0):
-                print api
-                answer = getAnswer(hashtagSet)
-                screenName = mention.GetUser().GetScreenName()
-                print "Screen Name: " + screenName
-                accountID = getAccountID(screenName) 
-                childID = getChildID(hashtagSet, accountID)
-                print "childID: ", childID
-                print "prepare to write data into DB"
-                if childID != -1:
-                    writeResponseToDb(accountID, childID, questionID, answer, responseTime)
-    
-            print "========================================================"
-        writeLastCheckToDb(accountScreenName, newLastMentionId)
-        print 'end of loop'
+        processResponses(mentions)
+        
+        processResponses(directMsgs)
+        
+        
     db.close()
 if __name__ == '__main__':
     main()

@@ -181,7 +181,7 @@ def processResponses(mentions):
     writeLastCheckToDb(accountScreenName, newLastMentionId)
     print 'end of loop'
     
-def getUserReplies(sinceId)
+def getUserReplies(sinceId): 
     page = 1
     limit = 2000
     mentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)

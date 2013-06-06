@@ -243,6 +243,7 @@ def getUserReplies(sinceId):
     return mentions
 
 def main():
+    # Set the name of "api" to global so that rest functions can share accountData
     global api
     #===========================================================================
     # get twitterAcount data

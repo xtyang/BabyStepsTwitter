@@ -146,7 +146,7 @@ def timeToDate(timeS):
     ts  = time.strftime("%Y-%m-%d %H:%M:%S",t)
     return ts
 
-def processResponses(mentions): 
+def processReplies(accountScreenName, mentions): 
     i=1
     newestMention = True
     newLastMentionId = 0
@@ -180,31 +180,67 @@ def processResponses(mentions):
         print "========================================================"
     writeLastCheckToDb(accountScreenName, newLastMentionId)
     print 'end of loop'
+
+def processDMs(accountScreenName, mentions): 
+    i=1
+    newestMention = True
+    newLastMentionId = 0
+    for mention in mentions: 
+        if(newestMention):
+            newLastMentionId = mention.GetId()
+            print "newLastMentionId",newLastMentionId
+            newestMention = False
+        print "newLastMentionId: " + str(newLastMentionId)
+        print str(i) + "--------------------------------------------------------"
+        i=i+1
+        print "Friend's Screen Name: " + mention.GetSenderScreenName()
+        print "Tweet ID: " + str(mention.GetId())
+        responseTime = timeToDate(mention.GetCreatedAt())
+        print responseTime
+        
+        hashtagSet = getHashtagSet(mention)
+        questionID = getQuestionID(hashtagSet)
+        if (questionID != 0):
+            print api
+            answer = getAnswer(hashtagSet)
+            screenName = mention.GetSenderScreenName()
+            print "Screen Name: " + screenName
+            accountID = getAccountID(screenName) 
+            childID = getChildID(hashtagSet, accountID)
+            print "childID: ", childID
+            print "prepare to write data into DB"
+            if childID != -1:
+                writeResponseToDb(accountID, childID, questionID, answer, responseTime)
+
+        print "========================================================"
+    writeLastCheckToDb(accountScreenName, newLastMentionId)
+    print 'end of loop'
     
-def getUserReplies(sinceId): 
+def getUserReplies(sinceId):
     page = 1
     limit = 2000
     mentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
     
-    if(len(mentions) == 0):continue 
-    oldLastId = mentions[-1].GetId()
-    newLastId = 0
-    isNotLast = True
-    while(isNotLast and len(mentions) < limit):
-        page = page + 1
-        moreMentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
-        for moreMention in moreMentions: 
-            mentions.append(moreMention)
-        newLastId = mentions[-1].GetId()
-        if(newLastId == oldLastId): 
-            isNotLast = False
-        else: 
-            oldLastId = newLastId
-        print "newLastId: " + str(newLastId) + ", oldLastId: " + str(oldLastId)  
-        print "sinceId: " + str(sinceId)
-        print "Appended 100! "
-        print "mentions length: " + str(len(mentions))
-
+    if(len(mentions) != 0):
+        oldLastId = mentions[-1].GetId()
+        newLastId = 0
+        isNotLast = True
+        while(isNotLast and len(mentions) < limit):
+            page = page + 1
+            moreMentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
+            for moreMention in moreMentions: 
+                mentions.append(moreMention)
+            newLastId = mentions[-1].GetId()
+            if(newLastId == oldLastId): 
+                isNotLast = False
+            else: 
+                oldLastId = newLastId
+            print "newLastId: " + str(newLastId) + ", oldLastId: " + str(oldLastId)  
+            print "sinceId: " + str(sinceId)
+            print "Appended 100! "
+            print "mentions length: " + str(len(mentions))
+        
+    return mentions
 
 def main():
     global api
@@ -260,8 +296,11 @@ def main():
         directMsgs = api.GetDirectMessages(None, sinceId, 1)
         replies = getUserReplies(sinceId)
 
-        processResponses(replies)
-        processResponses(directMsgs)
+        if(len(replies) != 0):
+            processReplies(accountScreenName, replies)
+            
+        if(len(directMsgs) != 0):
+            processDMs(accountScreenName, directMsgs)
         
         
     db.close()

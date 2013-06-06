@@ -233,7 +233,7 @@ def main():
 
         page = 1
         mentions = api.GetFriendsTimeline(None, 100, page, sinceId, False, False)
-        directMsgs = api.GetDirectMessages(None, sincdId, 1)
+        directMsgs = api.GetDirectMessages(None, sinceId, 1)
         
         if(len(mentions) == 0):continue 
         oldLastId = mentions[-1].GetId()

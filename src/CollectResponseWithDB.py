@@ -1,7 +1,7 @@
 '''
 Created on May 9, 2013
 
-@author: Tien, Xiaotong
+@author: Li-Tien, Xiaotong
 '''
 import time
 import twitter

@@ -9,12 +9,12 @@ import MySQLdb
 from decimal import *
 
 # Connect to the database
-db = MySQLdb.connect(host="db.babystepsuw.org",user="babystepsdbadmin",
+db = MySQLdb.connect(host="140.117.179.157",user="babystepsdbadmin",
 passwd="vNRLtLf2Rhyy",db="babystepsdb") 
 cursor  = db.cursor()
 api     = None
-
-
+#140.117.179.157
+#db.babystepsuw.org
 # Filter out all the hashtags in a tweet, return the hashtag set. 
 def getHashtagSet(status):
     print "getHashtagSet() started. "
@@ -313,11 +313,11 @@ def main():
         #=======================================================================
         # let sinceID = lastMentionID
         #=======================================================================
-        query   = 'SELECT lastMentionId FROM twitteraccount WHERE account_name="%s"'%(accountScreenName)
-        rowNum  = cursor.execute(query)
-        infos   = cursor.fetchall()
-        sinceId = infos[0][0]
-
+        #query   = 'SELECT lastMentionId FROM twitteraccount WHERE account_name="%s"'%(accountScreenName)
+        #rowNum  = cursor.execute(query)
+        #infos   = cursor.fetchall()
+        #sinceId = infos[0][0]
+        sinceId  = lastMentionId
         
         directMsgs = api.GetDirectMessages(None, sinceId, 1)
         replies = getUserReplies(sinceId)

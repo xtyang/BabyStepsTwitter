@@ -76,6 +76,8 @@ def getAnswer(hashtagSet):
         elif (hashtag.lower().startswith('sometimes') or hashtag.lower() == 's'): 
             answer = "Sometimes"
             break
+        else: 
+            answer = None
     print "getAnswer() ended. Answer is: " + answer
     return answer
       
@@ -151,33 +153,37 @@ def processReplies(accountScreenName, mentions):
     newestMention = True
     newLastMentionId = 0
     for mention in mentions: 
-        if(newestMention):
-            newLastMentionId = mention.GetId()
-            print "newLastMentionId",newLastMentionId
-            newestMention = False
-        print "newLastMentionId: " + str(newLastMentionId)
-        print str(i) + "--------------------------------------------------------"
-        i=i+1
-        print "Friend's Screen Name: " + mention.GetUser().GetScreenName()
-        print "Tweet ID: " + str(mention.GetId())
-        responseTime = timeToDate(mention.GetCreatedAt())
-        print responseTime
-        
-        hashtagSet = getHashtagSet(mention)
-        questionID = getQuestionID(hashtagSet)
-        if (questionID != 0):
-            print api
-            answer = getAnswer(hashtagSet)
-            screenName = mention.GetUser().GetScreenName()
-            print "Screen Name: " + screenName
-            accountID = getAccountID(screenName) 
-            childID = getChildID(hashtagSet, accountID)
-            print "childID: ", childID
-            print "prepare to write data into DB"
-            if childID != -1:
-                writeResponseToDb(accountID, childID, questionID, answer, responseTime)
-
-        print "========================================================"
+        if(userRegistered(mention.GetUser().GetScreenName()): 
+            if(newestMention):
+                newLastMentionId = mention.GetId()
+                print "newLastMentionId",newLastMentionId
+                newestMention = False
+            print "newLastMentionId: " + str(newLastMentionId)
+            print str(i) + "--------------------------------------------------------"
+            i=i+1
+            print "Friend's Screen Name: " + mention.GetUser().GetScreenName()
+            print "Tweet ID: " + str(mention.GetId())
+            responseTime = timeToDate(mention.GetCreatedAt())
+            print responseTime
+            
+            hashtagSet = getHashtagSet(mention)
+            questionID = getQuestionID(hashtagSet)
+            if (questionID != 0):
+                print api
+                answer = getAnswer(hashtagSet)
+                if(answer != None): 
+                    screenName = mention.GetUser().GetScreenName()
+                    print "Screen Name: " + screenName
+                    accountID = getAccountID(screenName) 
+                    childID = getChildID(hashtagSet, accountID)
+                    print "childID: ", childID
+                    print "prepare to write data into DB"
+                    if childID != -1:
+                        writeResponseToDb(accountID, childID, questionID, answer, responseTime)
+                else: 
+                    sendErrorDM(mention.GetUser().GetScreenName()
+    
+            print "========================================================"
     writeLastCheckToDb(accountScreenName, newLastMentionId)
     print 'end of loop'
 
@@ -186,33 +192,37 @@ def processDMs(accountScreenName, mentions):
     newestMention = True
     newLastMentionId = 0
     for mention in mentions: 
-        if(newestMention):
-            newLastMentionId = mention.GetId()
-            print "newLastMentionId",newLastMentionId
-            newestMention = False
-        print "newLastMentionId: " + str(newLastMentionId)
-        print str(i) + "--------------------------------------------------------"
-        i=i+1
-        print "Friend's Screen Name: " + mention.GetSenderScreenName()
-        print "Tweet ID: " + str(mention.GetId())
-        responseTime = timeToDate(mention.GetCreatedAt())
-        print responseTime
-        
-        hashtagSet = getHashtagSet(mention)
-        questionID = getQuestionID(hashtagSet)
-        if (questionID != 0):
-            print api
-            answer = getAnswer(hashtagSet)
-            screenName = mention.GetSenderScreenName()
-            print "Screen Name: " + screenName
-            accountID = getAccountID(screenName) 
-            childID = getChildID(hashtagSet, accountID)
-            print "childID: ", childID
-            print "prepare to write data into DB"
-            if childID != -1:
-                writeResponseToDb(accountID, childID, questionID, answer, responseTime)
-
-        print "========================================================"
+        if(userRegistered(mention.GetUser().GetScreenName()): 
+            if(newestMention):
+                newLastMentionId = mention.GetId()
+                print "newLastMentionId",newLastMentionId
+                newestMention = False
+            print "newLastMentionId: " + str(newLastMentionId)
+            print str(i) + "--------------------------------------------------------"
+            i=i+1
+            print "Friend's Screen Name: " + mention.GetSenderScreenName()
+            print "Tweet ID: " + str(mention.GetId())
+            responseTime = timeToDate(mention.GetCreatedAt())
+            print responseTime
+            
+            hashtagSet = getHashtagSet(mention)
+            questionID = getQuestionID(hashtagSet)
+            if (questionID != 0):
+                print api
+                answer = getAnswer(hashtagSet)
+                if(answer != None): 
+                    screenName = mention.GetSenderScreenName()
+                    print "Screen Name: " + screenName
+                    accountID = getAccountID(screenName) 
+                    childID = getChildID(hashtagSet, accountID)
+                    print "childID: ", childID
+                    print "prepare to write data into DB"
+                    if childID != -1:
+                        writeResponseToDb(accountID, childID, questionID, answer, responseTime)
+                else: 
+                    sendErrorDM(mention.GetUser().GetScreenName()
+    
+            print "========================================================"
     writeLastCheckToDb(accountScreenName, newLastMentionId)
     print 'end of loop'
     

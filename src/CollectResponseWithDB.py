@@ -1,7 +1,7 @@
 '''
 Created on May 9, 2013
 
-@author: Xiaotong Yang, Li-tien Ou
+@author: Xiaotong Yang, Li-Tien Ou
 '''
 import time
 import twitter
@@ -9,7 +9,7 @@ import MySQLdb
 from decimal import *
 
 # Connect to the database
-db = MySQLdb.connect(host="db.babystepsuw.org",user="babystepsdbadmin",
+db = MySQLdb.connect(host="140.117.179.157",user="babystepsdbadmin",
 passwd="vNRLtLf2Rhyy",db="babystepsdb") 
 cursor  = db.cursor()
 api     = None
@@ -166,7 +166,7 @@ def processReplies(accountScreenName, mentions):
     newestMention = True
     newLastMentionId = 0
     for mention in mentions: 
-        if(userRegistered(mention.GetUser().GetScreenName()): 
+        if(userRegistered(mention.GetUser().GetScreenName())): 
             if(newestMention):
                 newLastMentionId = mention.GetId()
                 print "newLastMentionId",newLastMentionId
@@ -194,7 +194,7 @@ def processReplies(accountScreenName, mentions):
                     if childID != -1:
                         writeResponseToDb(accountID, childID, questionID, answer, responseTime)
                 else: 
-                    sendErrorDM(mention.GetUser().GetScreenName()
+                    sendErrorDM(mention.GetUser().GetScreenName())
     
             print "========================================================"
     writeLastCheckToDb(accountScreenName, newLastMentionId)
@@ -206,7 +206,7 @@ def processDMs(accountScreenName, mentions):
     newestMention = True
     newLastMentionId = 0
     for mention in mentions: 
-        if(userRegistered(mention.GetUser().GetScreenName()): 
+        if(userRegistered(mention.GetUser().GetScreenName())): 
             if(newestMention):
                 newLastMentionId = mention.GetId()
                 print "newLastMentionId",newLastMentionId
@@ -234,9 +234,9 @@ def processDMs(accountScreenName, mentions):
                     if childID != -1:
                         writeResponseToDb(accountID, childID, questionID, answer, responseTime)
                 else: 
-                    sendErrorDM(mention.GetUser().GetScreenName()
+                    sendErrorDM(mention.GetUser().GetScreenName())
     
-            print "========================================================"
+    print "========================================================"
     writeLastCheckToDb(accountScreenName, newLastMentionId)
     print 'end of loop'
 

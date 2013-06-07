@@ -9,7 +9,7 @@ import MySQLdb
 from decimal import *
 
 # Connect to the database
-db = MySQLdb.connect(host="140.117.179.157",user="babystepsdbadmin",
+db = MySQLdb.connect(host="db.babystepsuw.org",user="babystepsdbadmin",
 passwd="vNRLtLf2Rhyy",db="babystepsdb") 
 cursor  = db.cursor()
 api     = None

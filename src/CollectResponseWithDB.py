@@ -102,10 +102,13 @@ def getChildID(hashtagSet, accountID):
     childRowNum = cursor.execute('SELECT * FROM child WHERE accountID =%s', (accountID))
     childInfos  = cursor.fetchall()
     childID   = -1
-    for childData in childInfos:
-        #print childData
-        if childData[3] in hashtagSet:
-            childID = childData[0]
+    if(len(childInfos) == 1): 
+        childID = childInfos[0][0]
+    else: 
+        for childData in childInfos:
+            #print childData
+            if childData[3] in hashtagSet:
+                childID = childData[0]
     print "childID:"
     print childID
     return childID

@@ -1,20 +1,21 @@
 '''
 Created on May 9, 2013
 
-@author: Li-Tien, Xiaotong
+@author: Xiaotong Yang, Li-tien Ou
 '''
 import time
 import twitter
 import MySQLdb
 from decimal import *
 
-
+# Connect to the database
 db = MySQLdb.connect(host="db.babystepsuw.org",user="babystepsdbadmin",
 passwd="vNRLtLf2Rhyy",db="babystepsdb") 
 cursor  = db.cursor()
 api     = None
 
 
+# Filter out all the hashtags in a tweet, return the hashtag set. 
 def getHashtagSet(status):
     print "getHashtagSet() started. "
     s = status.text
@@ -24,7 +25,8 @@ def getHashtagSet(status):
         print hashtag
     print "getHashtagSet() ended. "
     return hashtagSet
-    
+
+# Filter out the hashtag that contains the baby code, then get the question number. 
 def getQuestionID(hashtagSet):
     print "getQuestionID() started. "
     flag = False
@@ -47,6 +49,8 @@ def getQuestionID(hashtagSet):
         print "Not found. getQuestionID() ended. "
         return 0
 
+# If the baby code hashtag was not containted in the reply, try finding the baby code tag in its source tweet (the tweet this reply is replying to)
+# This module is not used in the actual process. We left it here as a back-up
 def getQuestionIDfromSource(status):
     global api
     print "getQuestionIDfromSource() started. "
@@ -62,7 +66,7 @@ def getQuestionIDfromSource(status):
     print questionIDnum
     return questionIDnum
    
-    
+# Filter out the "yes", "not yet", "sometimes" answer from the hashtag set. 
 def getAnswer(hashtagSet):
     print "getAnswer() started. "
     answer = "none"
@@ -81,7 +85,7 @@ def getAnswer(hashtagSet):
     print "getAnswer() ended. Answer is: " + answer
     return answer
       
- 
+# Retrieve the user's Baby Steps accountId from the database, using her twitter screen name
 def getAccountID(screenName):
     # -1 for null
     print "getAccountID() started."
@@ -93,7 +97,9 @@ def getAccountID(screenName):
         tmpID   = accountID[0]
     return tmpID
 
-
+# Get the id of the user's child mentioned in the reply tweet. 
+# If this user has registered only one child, we will retrive this child's id even if the user forgot to mention her child's name in her response. 
+# If this user has registered multiple children, she must mention the child's name in her replying tweet. 
 def getChildID(hashtagSet, accountID):
     #-1 == null
     #the data format of childInfos :{child_id accountID laName fiName miName birthD gen image laID laTime}
@@ -123,6 +129,7 @@ def writeResponseToDb(accountID, childID, questionID, answer, responseTime):
     db.commit()
     print("insert response to DB succeed.")
 
+# Write the id of the last checked tweet into the database. Next time we will start processing the tweets newer than the last checked tweet. 
 def writeLastCheckToDb(screenName, newLastMentionId):
     print("writeLastCheckToDb() started.")
     tmpS    = "UPDATE `babystepsdb`.`twitteraccount` SET `lastMentionId` = '%s' WHERE `account_name` = '%s'"% (newLastMentionId, screenName)
@@ -130,7 +137,8 @@ def writeLastCheckToDb(screenName, newLastMentionId):
     cursor.execute(tmpS)
     db.commit()
     print("insert lastcheck to DB succeed. ")
-    
+
+# Check if the user has registered her twitter account with us. 
 def userRegistered(screenName):
     twitterRowNum   = cursor.execute('SELECT * FROM contactinfo')
     twitterInfos    = cursor.fetchall()
@@ -140,7 +148,8 @@ def userRegistered(screenName):
     if screenName in tmpTwitter:
         return True
     return False     
-    
+
+# Send a reminder through direct message if the user forgot to answer the question in its right format. 
 def sendErrorDM(screenName):
     global api
     api.PostDirectMessage(screenName, "Reminder: respond to questions with #yes #sometimes or #notyet and #firstname and #babycode.")
@@ -151,6 +160,7 @@ def timeToDate(timeS):
     ts  = time.strftime("%Y-%m-%d %H:%M:%S",t)
     return ts
 
+# Collect and process every reply we received since last check. 
 def processReplies(accountScreenName, mentions): 
     i=1
     newestMention = True
@@ -190,6 +200,7 @@ def processReplies(accountScreenName, mentions):
     writeLastCheckToDb(accountScreenName, newLastMentionId)
     print 'end of loop'
 
+# Collect and process every direct message since last check. 
 def processDMs(accountScreenName, mentions): 
     i=1
     newestMention = True
@@ -228,7 +239,8 @@ def processDMs(accountScreenName, mentions):
             print "========================================================"
     writeLastCheckToDb(accountScreenName, newLastMentionId)
     print 'end of loop'
-    
+
+# Get newly received user replies since last check. 
 def getUserReplies(sinceId):
     page = 1
     limit = 2000
